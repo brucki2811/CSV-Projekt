@@ -19,7 +19,7 @@ class csvwr(object):
     def read(self,filename):
         with open(filename, 'r') as f:
             try:
-                dialect = csv.Sniffer().sniff(f.read(), [',', '\t', ';', ' ', ':', '|'])
+                dialect = csv.Sniffer().sniff(f.read(), ['\t', ';', ',', ' ', ':', '|'])
             except:
                 dialect = None
             f.seek(0)
@@ -38,9 +38,3 @@ class csvwr(object):
             writer = csv.writer(f)
             writer.writerows(self.liste)
 
-
-csvfile = csvwr("sprengel.csv")
-csvfile.read("sprengel.csv")
-csvfile.write("test.csv")
-csvfile.read("test1.csv")
-csvfile.write("test.csv")
