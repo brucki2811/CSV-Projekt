@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 __author__ = "Bruckner Michael"
 __version__ = 1.0
 ___date__ = 20160122
