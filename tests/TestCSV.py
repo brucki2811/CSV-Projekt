@@ -1,9 +1,10 @@
+#!/usr/bin/env python3
+import unittest
+from csv_tool.__init__ import *
+
 __author__ = "Bruckner Michael"
 __version__ = 1.0
 ___date__ = 20160213
-
-import unittest
-from csv_tool.__init__ import *
 
 class TestAllgemein(unittest.TestCase):
 

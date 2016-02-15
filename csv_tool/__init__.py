@@ -1,5 +1,5 @@
-#!/usr/bin/env python
-
+#!/usr/bin/env python3
+import csv
 __author__ = "Bruckner Michael"
 __version__ = 1.0
 ___date__ = 20160122
@@ -7,7 +7,6 @@ ___date__ = 20160122
 Die Klasse csvwr ermoeglicht uns das Lesen von Daten und das Schreiben von diesen.
 Es ist moeglich Daten aus anderen Files zusaetzlich anzuhaengen.
 """
-import csv
 
 class csvwr(object):
 
