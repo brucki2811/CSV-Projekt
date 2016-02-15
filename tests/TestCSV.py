@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import unittest
-from csv_tool.__init__ import *
+from csv_tool.CSVUebung import *
 
 __author__ = "Bruckner Michael"
 __version__ = 1.0
