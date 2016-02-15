@@ -3,7 +3,7 @@ __version__ = 1.0
 ___date__ = 20160213
 
 import unittest
-from CSVUebung import *
+from csv_tool.__init__ import *
 
 class TestAllgemein(unittest.TestCase):
 

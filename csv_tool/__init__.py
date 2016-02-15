@@ -18,7 +18,7 @@ class csvwr(object):
     """
     Mittels der Methode read koennen wir jedes beliebige File einlesen.
     """
-    def read(self,filename):
+    def read(self, filename):
         with open(filename, 'r') as f:
             try:
                 dialect = csv.Sniffer().sniff(f.read(), ['\t', ';', ',', ' ', ':', '|'])
@@ -35,7 +35,7 @@ class csvwr(object):
     """
     Mittels der Methode write koennen wir jedes beliebige File schreiben.
     """
-    def write(self,filename):
+    def write(self, filename):
         with open(filename, 'w') as f:
             writer = csv.writer(f)
             writer.writerows(self.liste)
