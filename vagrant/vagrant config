@@ -1,5 +1,5 @@
 vagrant plugin install vagrant-vbguest
 vagrant ssh
 vagrant status
-vagrant up							
+vagrant up
 vagrant box add ubuntu/trusty64
