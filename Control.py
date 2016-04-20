@@ -5,6 +5,7 @@ __date__ = 20160412
 from GUI import GUI
 import os
 import sys
+from orderedset.OrderedSet import OrderedSet
 from PySide.QtGui import *
 from PySide import *
 from TableModel import Table
@@ -16,6 +17,7 @@ from Funktionen.InsertCommand import InsertCommand
 from Funktionen.DuplicateCommand import DuplicateCommand
 from Funktionen.ItemDelegate import ItemDelegate
 from sql.SQL import SQL
+from Results import ResultsController
 
 class Controller(QMainWindow):
     def __init__(self, parent=None):
@@ -35,10 +37,7 @@ class Controller(QMainWindow):
         self.password = "root"
         self.database = "wahlen"
         self.wahltermin = "2016-04-24"
-        try:
-            self.db = SQL(self.username, self.password, self.database, self.wahltermin)
-        except Exception as e:
-            print(e)
+        self.db = SQL(self.username, self.password, self.database, self.wahltermin)
 
     def signals(self):
         self.gui.actionOpen.triggered.connect(self.csvfile)
@@ -54,26 +53,57 @@ class Controller(QMainWindow):
         self.gui.actionSave_As.triggered.connect(self.saveas)
         self.gui.actionEinlesen.triggered.connect(self.einlesen)
         self.gui.actionAuslesen.triggered.connect(self.auslesen)
+        self.gui.actionHochrechnung.triggered.connect(self.hochrechnung)
+        self.gui.actionUndo.triggered.connect(self.undo)
+        self.gui.actionRedo.triggered.connect(self.redo)
 
     def einlesen(self):
+        """
+        Ruft die Funktion writeList auf mittels welcher in die Datenbank geschrieben werden kann.
+        :return:
+        """
         try:
             liste = self.tablemodel.getList()
             self.db.writeList(liste)
         except Exception as e:
             print(e)
 
+        QtGui.QMessageBox.information(self, "Einlesen", "Das Einlesen in die Datenbank hat geklappt! :D")
+
     def auslesen(self):
+        """
+        Ruft die Funktion loadlist auf mittels welcher die Daten aus der Datenbakn ausgelesen werden.
+        :return:
+        """
         try:
             datalist, header = self.db.loadList()
             self.update_table(datalist, header)
         except Exception as e:
             print(e)
 
+        QtGui.QMessageBox.information(self, "Auslesen", "Das Auselen aus der Datenbank hat geklappt! :D")
+
+    def hochrechnung(self):
+        """
+        Es wird die Funktion results aufgerufen und eine neues Fenster geöffnet, in welchem die
+        Hochrechnung angezeigt wird.
+        :return:
+        """
+        datalist, header = self.db.results()
+        rechnung = ResultsController(datalist, header, title="Hochrechnung in %")
+        rechnung.show()
+
     def closegui(self):
+        """
+        Die Funktion wird aufgerufen, wenn das Programm geschlossen werden soll.
+        Es wird vor dem Schliessen abgefrag, ob man wirklich beenden will.
+        :return:
+        """
         result = QtGui.QMessageBox.question(QtGui.QWidget(),
         'Exit',"Moechten Sie das Programm wirklich beenden?\n Alle ungespeicherten Daten gehen verloren!",
         QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
         if result == QtGui.QMessageBox.Yes:
+            QtGui.QMessageBox.information(self, "Bye Bye", "Bis zum nächsten Mal! :D")
             self.close()
         else:
             pass
@@ -105,18 +135,32 @@ class Controller(QMainWindow):
         Mit dieser Methode wird das ausgewaehlte CSV-File in die Tabelle importiert
         :return:
         """
-        fname = QtGui.QFileDialog.getOpenFileName(self.mwindow, 'Open file...', os.getcwd(), "CSV (*.csv)")[0]
-        if len(fname) > 0:
-            self.model.currentfile = fname
-            datalist, header = self.model.read_csv(fname)
-            self.update_table(datalist, header)
+        if self.tablemodel.getHeader() == [] and self.tablemodel.getList() == []:
+            fname = QtGui.QFileDialog.getOpenFileName(self.mwindow, 'Open file...', os.getcwd(), "CSV (*.csv)")[0]
+            if len(fname) > 0:
+                self.model.currentfile = fname
+                datalist, header = self.model.read_csv(fname)
+                self.update_table(datalist, header)
+        else:
+            result = QtGui.QMessageBox.question(QtGui.QWidget(),
+            'Open',"Moechten Sie wirklich eine neues File öffnen?\n Alle ungespeicherten Daten gehen verloren!",
+            QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+            if result == QtGui.QMessageBox.Yes:
+                fname = QtGui.QFileDialog.getOpenFileName(self.mwindow, 'Open file...', os.getcwd(), "CSV (*.csv)")[0]
+                if len(fname) > 0:
+                    self.model.currentfile = fname
+                    datalist, header = self.model.read_csv(fname)
+                    self.update_table(datalist, header)
+            else:
+                pass
+
 
     def insertintable(self):
         """
-        Erzeugt eine neuen Zeile (unterhalb der aktuellen Zeile)
+        Erzeugt eine neuen Zeile (oberhalb der aktuellen Zeile)
         :return:
         """
-        index, amount = self.get_selctedcell()
+        index, amount = self.get_selectedcell()
         self.undoStack.beginMacro("Add Row")
         self.undoStack.push(InsertCommand(self.tablemodel, index, 1))
         self.undoStack.endMacro()
@@ -127,7 +171,7 @@ class Controller(QMainWindow):
         Entfernt eine asugewaehlte Zeile
         :return:
         """
-        index, amount = self.get_selctedcell()
+        index, amount = self.get_selectedcell()
         if index != len(self.tablemodel.getList()):
             self.undoStack.beginMacro("Remove Row/s")
             self.undoStack.push(RemoveCommand(self.tablemodel, index, amount))
@@ -136,7 +180,7 @@ class Controller(QMainWindow):
 
     def copycell(self):
         """
-        Kopiert einzelne Zellen
+        Kopiert einzelne Zelle
         :return:
         """
         clipboard = QApplication.clipboard()
@@ -160,6 +204,10 @@ class Controller(QMainWindow):
         self.gui.tableView.reset()
 
     def pastecell(self):
+        """
+        Kopiert Wert in eine ausgewaehlte Zelle
+        :return:
+        """
         clipboard = QApplication.clipboard()
         index = self.gui.tableView.selectionModel().selectedIndexes()[0]
         command = EditCommand(self.tablemodel, index)
@@ -170,17 +218,32 @@ class Controller(QMainWindow):
     def duplicatecell(self):
         """
         Duplizieren der aktuellen Zeile (inklusive einfuegen unterhalb der aktuellen Zeile)
-        Der erste Index einer Zeile muss augewaehlt werden um zu duplizieren, also den Wert
+        Der erste Index einer Zeile muss ausgewaehlt werden um zu duplizieren, also den Wert
         in der ersten Spalte waehlen.
         """
-        index, amount = self.get_selctedcell()
+        index, amount = self.get_selectedcell()
         self.undoStack.beginMacro("Duplicate Row")
         self.undoStack.push(DuplicateCommand(self.tablemodel, index))
         self.undoStack.endMacro()
         self.undoText_redoText()
         self.gui.tableView.reset()
 
-    def get_selctedcell(self):
+    def update_table(self, datlist, header):
+        """
+        Erzeugt eine neue Tabelle mit den Listen datalist und header
+        :param datlist: es wird die neue datalist uebergeben
+        :param header:  es wird der neue header uebergeben
+        :return:
+        """
+        self.tablemodel.set_list(datlist, header)
+        self.gui.tableView.reset()
+        self.gui.tableView.setModel(self.tablemodel)
+
+    def selectedcell(self):
+        si = self.gui.tableView.selectedIndexes()
+        return [index for index in si if not index.column()]
+
+    def get_selectedcell(self):
         si = self.selectedcell()
         if not si:
             return self.tablemodel.rowCount(self), 1
@@ -190,31 +253,44 @@ class Controller(QMainWindow):
 
         return row, len(si)
 
-    def update_table(self, datlist, header):
-        self.tablemodel.set_list(datlist, header)
-        self.gui.tableView.reset()
-        self.gui.tableView.setModel(self.tablemodel)
-
-    def selectedcell(self):
-        si = self.gui.tableView.selectedIndexes()
-        return [index for index in si if not index.column()]
-
     def savefile(self):
+        """
+        Speichert das File unter dem Namen unter welchem es geoeffnet wurde.
+        Hat das File noch keinen Namen wird die Methode saveas aufgerufen.
+        :return:
+        """
         if self.filename is not None:
             self.model.write_csv(self.tablemodel.getList(), self.filename)
         else:
             self.saveas()
+        QtGui.QMessageBox.information(self, "Speichern", "Das File wurde gespeichert! :D")
 
     def saveas(self):
+        """
+        Fuehrt die Methode savefile aus um Files zu speichern.
+        Es wird beim Aufruf ein Fenster erzeugt, indem der User den Filenamen
+        festlegt und den Speicherort auswaehlt.
+        :return:
+        """
         filename = QFileDialog.getSaveFileName(self, caption="Save CSV-File", dir=self.filename, filter="CSV-File (*.csv)")[0]
         if len(filename) > 0:
             self.filename = filename
             self.savefile()
 
     def newfile(self):
+        """
+        Erzeugt eine neue Tabelle.
+        :return:
+        """
         self.filename = None
-        self.tablemodel.set_list([], [])
-
+        result = QtGui.QMessageBox.question(QtGui.QWidget(),
+        'Open',"Moechten Sie wirklich eine neue Tabelle erstellen?\n Alle ungespeicherten Daten gehen verloren!",
+        QtGui.QMessageBox.Yes | QtGui.QMessageBox.No, QtGui.QMessageBox.No)
+        if result == QtGui.QMessageBox.Yes:
+            #header = ['WK','SPR', 'BZ', 'WBER', 'ABG', 'UNG','ANDAS','FPOE','FREIE','GFW','GRUE','M','NEOS','OEVP','SLP','SPOE','WIFF','WWW',]
+            self.tablemodel.set_list([], self.tablemodel.getHeader())
+        else:
+            pass
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)

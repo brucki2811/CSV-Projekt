@@ -49,13 +49,12 @@ class Table(QAbstractTableModel):
 
     def setData(self, *args):
         self.list[args[0].row()][self.header[args[0].column()]] = args[1]
-        # self.emit(SIGNAL("dataChanged()"))
         return True
 
-    def insertRow(self, row, rows, parent=QModelIndex()):
-        self.beginInsertRows(parent, row, row + rows - 1)
+    def insertRows(self, index, rows, parent=QModelIndex()):
+        self.beginInsertRows(parent, index, index + rows - 1)
         for tmp in range(rows):
-            self.daten.insert(row, {key: "" for key in self.header})
+            self.list.insert(index, {key: "" for key in self.header})
         self.endInsertRows()
         return True
 
@@ -66,8 +65,8 @@ class Table(QAbstractTableModel):
         self.list[rindex+1] = row
         self.endInsertRows()
 
-    def removeRows(self, row, rows, parent=QModelIndex()):
-        self.beginRemoveRows(parent, row, row + rows - 1)
-        del self.list[row:row + rows]
+    def removeRows(self, index, rows, parent=QModelIndex()):
+        self.beginRemoveRows(parent, index, index + rows - 1)
+        del self.list[index:index + rows]
         self.endRemoveRows()
         return True

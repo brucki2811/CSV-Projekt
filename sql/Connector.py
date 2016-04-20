@@ -1,5 +1,11 @@
+author__ = 'Bruckner Michael'
+__version__ = 1.2
+__date__ = 20160409
+
+
 from abc import ABCMeta
 
+import pymysql
 from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
@@ -27,5 +33,6 @@ class Connector(metaclass=ABCMeta):
 
 class MySQLConnector(Connector):
     def __init__(self, username, password, database):
-        connection_string = "mysql+mysqldb://" + username + ":" + password + "@localhost/" + database + "?charset=utf8"
+        pymysql.install_as_MySQLdb()
+        connection_string = "mysql+mysqldb://" + username + ":" + password + "@127.0.0.1/" + database + "?charset=utf8"
         super().__init__(connection_string)

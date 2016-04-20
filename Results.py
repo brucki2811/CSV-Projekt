@@ -1,7 +1,9 @@
+author__ = 'Bruckner Michael'
+__version__ = 1.0
+__date__ = 20160412
+
 from PySide import QtGui
-
 from PySide.QtGui import QDialog, QVBoxLayout
-
 from TableModel import Table
 
 
@@ -19,7 +21,7 @@ class ResultsController(QDialog):
         self.gui.setModel(tablemodel)
         self.gui.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.gui.resizeColumnsToContents()
-        layout.addWidget(self.view)
+        layout.addWidget(self.gui)
 
         self.setWindowTitle(title)
         self.resize(850,120)

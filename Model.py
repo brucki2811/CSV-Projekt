@@ -20,8 +20,14 @@ class Model(object):
                 dialect = None
             f.seek(0)
             csvreader = DictReader(f, dialect=dialect)
+            header = csvreader.fieldnames
+            for i in range(len(header)):
+                if header[i] == "":
+                    del header[i]
 
             for n in csvreader:
+                if "" in n:
+                    del n[""]
                 self.liste.append(n)
 
         return self.liste, csvreader.fieldnames

@@ -1,8 +1,8 @@
--- Autor: Michael Brucken
+-- Autor: Michael Bruckner
 -- Date: 12-01-2016
 -- Version: 1.4
 
-CREATE DATABASE wahlen;
+CREATE DATABASE wahlen DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
 USE wahlen;
 
 CREATE TABLE wahlkreis(
@@ -67,7 +67,7 @@ CREATE TABLE wahlstimmen(
 	gesamte INT,
 	PRIMARY KEY(termin,abkuerzung),
 	FOREIGN KEY(termin) REFERENCES wahl(termin) ON UPDATE CASCADE ON DELETE CASCADE,
-	FOREIGN KEY(abkuerzung) REFERENCES partei(abkuerzung) ON UPDATE CASCADE ON DELETE CASCADE	
+	FOREIGN KEY(abkuerzung) REFERENCES partei(abkuerzung) ON UPDATE CASCADE ON DELETE CASCADE
 ) ENGINE = INNODB;
 
 CREATE TABLE hochrechnung(
@@ -81,7 +81,7 @@ CREATE TABLE hochrechnungsdaten(
 	termin DATE,
 	zeitpunkt TIME,
 	abkuerzung VARCHAR(255),
-	prozent DECIMAL,
+	prozent FLOAT,
 	PRIMARY KEY(termin,zeitpunkt,abkuerzung),
 	FOREIGN KEY(termin,zeitpunkt) REFERENCES hochrechnung(termin,zeitpunkt) ON UPDATE CASCADE ON DELETE CASCADE,
 	FOREIGN KEY(abkuerzung) REFERENCES partei(abkuerzung) ON UPDATE CASCADE ON DELETE CASCADE

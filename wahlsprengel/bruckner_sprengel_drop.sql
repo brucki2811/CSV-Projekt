@@ -1,4 +1,3 @@
-use wahlen;
 DROP TABLE IF EXISTS hochrechnungsdaten CASCADE;
 DROP TABLE IF EXISTS hochrechnung CASCADE;
 DROP TABLE IF EXISTS wahlstimmen CASCADE;
